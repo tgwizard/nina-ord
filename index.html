@@ -319,15 +319,37 @@
     60%      { transform: translateY(-14px) rotate(10deg)  scale(1.05); }
   }
 
-  #level-badge {
-    font-size: clamp(12px, 1.6vw, 16px);
+  #level-picker {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-top: 6px;
+  }
+  #level-picker button {
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 900;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 2px solid #c71585;
+    background: rgba(255, 255, 255, 0.65);
     color: #c71585;
-    font-weight: 700;
-    letter-spacing: 2px;
-    margin-top: 2px;
-    text-transform: uppercase;
-    min-height: 1em;
-    text-shadow: 1px 1px 0 #fff;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    transition: transform 0.15s ease, background 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #level-picker button:hover {
+    background: rgba(255, 105, 180, 0.35);
+    transform: scale(1.12);
+  }
+  #level-picker button.active {
+    background: #c71585;
+    color: #fff;
+    box-shadow: 0 0 12px rgba(199, 21, 133, 0.7), inset 0 -3px 0 rgba(0,0,0,0.15);
+    transform: scale(1.08);
   }
 
   #timer-bar-container {
@@ -408,7 +430,12 @@
 <div id="game">
   <div id="header">
     <h1>🌸 <span id="title-label">Ninas</span> ord 🌸</h1>
-    <div id="level-badge"></div>
+    <div id="level-picker" aria-label="Välj nivå">
+      <button type="button" data-level="1">1</button>
+      <button type="button" data-level="2">2</button>
+      <button type="button" data-level="3">3</button>
+      <button type="button" data-level="4">4</button>
+    </div>
   </div>
   <div id="word"></div>
   <div id="playarea">
@@ -479,6 +506,21 @@ let timerId = null;
 let LEVEL = 1;
 let EXTRA_LETTERS = 0;
 let TIMER_SECONDS = 0;
+
+function applyLevel(lvl) {
+  LEVEL = Math.max(1, Math.min(4, lvl));
+  EXTRA_LETTERS = LEVEL >= 2 ? 5 : 0;
+  TIMER_SECONDS = LEVEL === 3 ? 20 : LEVEL === 4 ? 5 : 0;
+
+  document.querySelectorAll('#level-picker button').forEach(b => {
+    b.classList.toggle('active', parseInt(b.dataset.level, 10) === LEVEL);
+  });
+
+  const url = new URL(window.location);
+  if (LEVEL > 1) url.searchParams.set('level', String(LEVEL));
+  else url.searchParams.delete('level');
+  history.replaceState(null, '', url);
+}
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
@@ -808,10 +850,17 @@ window.addEventListener('load', () => {
   document.title = `${label} ord`;
 
   const rawLevel = parseInt(params.get('level') || '1', 10);
-  LEVEL = Number.isFinite(rawLevel) ? Math.max(1, Math.min(4, rawLevel)) : 1;
-  EXTRA_LETTERS  = LEVEL >= 2 ? 5 : 0;
-  TIMER_SECONDS  = LEVEL === 3 ? 10 : LEVEL === 4 ? 2 : 0;
-  document.getElementById('level-badge').textContent = LEVEL > 1 ? `Nivå ${LEVEL}` : '';
+  const initial = Number.isFinite(rawLevel) ? Math.max(1, Math.min(4, rawLevel)) : 1;
+  applyLevel(initial);
+
+  document.getElementById('level-picker').addEventListener('click', e => {
+    const btn = e.target.closest('button[data-level]');
+    if (!btn) return;
+    const lvl = parseInt(btn.dataset.level, 10);
+    if (lvl === LEVEL) return;
+    applyLevel(lvl);
+    loadWord();
+  });
 
   loadWord();
   const playarea = document.getElementById('playarea');
