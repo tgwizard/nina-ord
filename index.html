@@ -129,13 +129,13 @@
 
   .letter {
     position: absolute;
-    width: clamp(74px, 13vw, 104px);
-    height: clamp(74px, 13vw, 104px);
+    width: clamp(92px, 16.25vw, 130px);
+    height: clamp(92px, 16.25vw, 130px);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(38px, 7vw, 58px);
+    font-size: clamp(48px, 8.75vw, 72px);
     font-weight: 900;
     color: white;
     cursor: none;
@@ -336,7 +336,7 @@ function loadWord() {
 
   const chars = shuffle(currentWord.split(''));
   const rect = playarea.getBoundingClientRect();
-  const size = Math.min(104, Math.max(74, window.innerWidth * 0.13));
+  const size = Math.min(130, Math.max(92, window.innerWidth * 0.1625));
   const margin = 10;
 
   chars.forEach(ch => {
@@ -550,7 +550,7 @@ function burstLetter(letter) {
 window.addEventListener('resize', () => {
   const playarea = document.getElementById('playarea');
   const rect = playarea.getBoundingClientRect();
-  const size = Math.min(104, Math.max(74, window.innerWidth * 0.13));
+  const size = Math.min(130, Math.max(92, window.innerWidth * 0.1625));
   letters.forEach(l => {
     l.size = size;
     l.x = Math.min(Math.max(0, l.x), rect.width - size);
