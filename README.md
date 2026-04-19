@@ -9,8 +9,11 @@ the play area. Tap the letters in order to fill in the word — each one
 colors in its slot. Finish the word for confetti.
 
 - 110 simple Swedish words
-- Single HTML file, no build step, no dependencies
+- Single HTML file (+ PWA manifest/service worker), no build step
 - Designed for ages ~4–6
+- **Installable as an app** — on iPad/iPhone: Share → "Add to Home Screen".
+  On Android/desktop Chrome: the address bar shows an install button.
+  Works offline once installed.
 - Customize the title with `?label=Name` (e.g.
   [?label=Elsas](https://tgwizard.github.io/nina-ord/?label=Elsas))
 - Difficulty picker (1–4) in the header, or via `?level=`:
