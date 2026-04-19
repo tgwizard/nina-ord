@@ -490,25 +490,10 @@ function clickLetter(letter) {
   }
 }
 
-const CELEBRATE_MESSAGES = [
-  '⭐ BRA JOBBAT! ⭐',
-  '🎉 HURRA! 🎉',
-  '✨ TOPPEN! ✨',
-  '🌟 SUPER! 🌟',
-  '💖 BRAVO! 💖',
-  '🎊 JÄTTEBRA! 🎊',
-  '⭐ DUKTIG! ⭐',
-  '✨ UNDERBART! ✨',
-  '🌈 FANTASTISKT! 🌈'
-];
-
 const FIREWORK_CHARS = ['✦','★','✧','♥','✿','◆','✺'];
 
 function celebrate() {
   const celebrateEl = document.getElementById('celebrate');
-  const celebrateSpan = celebrateEl.querySelector('span');
-  celebrateSpan.textContent = pick(CELEBRATE_MESSAGES);
-
   celebrateEl.classList.remove('show');
   void celebrateEl.offsetWidth;
   celebrateEl.classList.add('show');
