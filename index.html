@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>Ninas ord</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', system-ui, sans-serif;
+    background: linear-gradient(135deg, #ffe0ec 0%, #ffc0da 45%, #ff99c8 100%);
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+
+  #game {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #header {
+    padding: 12px 20px 0;
+    text-align: center;
+  }
+
+  h1 {
+    color: #c71585;
+    font-size: clamp(24px, 4vw, 40px);
+    text-shadow: 2px 2px 0 #fff, 4px 4px 0 rgba(199, 21, 133, 0.2);
+    letter-spacing: 2px;
+  }
+
+  #word {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: clamp(6px, 1.5vw, 14px);
+    padding: 20px 20px 10px;
+    min-height: 120px;
+  }
+
+  .word-letter {
+    font-size: clamp(54px, 11vw, 110px);
+    font-weight: 900;
+    color: transparent;
+    -webkit-text-stroke: 3px #e0a5be;
+    transition: -webkit-text-stroke-color 0.3s ease, color 0.3s ease;
+    line-height: 1;
+  }
+
+  .word-letter.filled {
+    animation: pop 0.5s cubic-bezier(.34,1.56,.64,1);
+  }
+
+  @keyframes pop {
+    0%   { transform: scale(1) rotate(0); }
+    40%  { transform: scale(1.5) rotate(-8deg); }
+    70%  { transform: scale(0.9) rotate(4deg); }
+    100% { transform: scale(1) rotate(0); }
+  }
+
+  #playarea {
+    flex: 1;
+    position: relative;
+    margin: 10px 16px 16px;
+    background:
+      linear-gradient(rgba(255, 224, 236, 0.55), rgba(255, 153, 200, 0.55)),
+      url('https://images.stilla.ai/1h9eA3JhzEz1qFJMXw6JhggomVaIQCbgiGSGtgwogfc/s:2048/plain/gs://stilla-org-files/org_01kb2c7sf1fb58kaawx949mrv8/files/file_01kpjac6v7fhfawb1s8zt2cs0t.png') center/cover no-repeat,
+      rgba(255, 255, 255, 0.35);
+    border: 3px dashed rgba(255, 105, 180, 0.35);
+    border-radius: 28px;
+    overflow: hidden;
+    box-shadow: inset 0 0 40px rgba(255, 182, 193, 0.5);
+  }
+
+  .letter {
+    position: absolute;
+    width: clamp(60px, 11vw, 86px);
+    height: clamp(60px, 11vw, 86px);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: clamp(32px, 6vw, 48px);
+    font-weight: 900;
+    color: white;
+    cursor: pointer;
+    box-shadow:
+      inset 0 -6px 0 rgba(0,0,0,0.18),
+      inset 0 4px 0 rgba(255,255,255,0.35),
+      0 6px 18px rgba(0,0,0,0.2);
+    text-shadow: 2px 2px 0 rgba(0,0,0,0.2);
+    transition: transform 0.12s ease;
+    will-change: transform, left, top;
+  }
+
+  .letter:hover { transform: scale(1.12); }
+  .letter:active { transform: scale(0.92); }
+
+  .letter.wrong { animation: shake 0.45s ease; }
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-12px) rotate(-6deg); }
+    40%, 80% { transform: translateX(12px) rotate(6deg); }
+  }
+
+  .letter.disappear {
+    animation: disappear 0.5s cubic-bezier(.5,-0.4,.7,.3) forwards;
+    pointer-events: none;
+  }
+  @keyframes disappear {
+    0%   { transform: scale(1) rotate(0); opacity: 1; }
+    30%  { transform: scale(1.4) rotate(15deg); opacity: 1; }
+    100% { transform: scale(0) rotate(540deg); opacity: 0; }
+  }
+
+  #celebrate {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: clamp(40px, 8vw, 72px);
+    font-weight: 900;
+    color: #c71585;
+    text-shadow:
+      3px 3px 0 #fff,
+      6px 6px 0 rgba(199, 21, 133, 0.25);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 100;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  #celebrate.show { animation: celebrate 1.8s ease forwards; }
+  @keyframes celebrate {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(-20deg); }
+    30%  { opacity: 1; transform: translate(-50%, -50%) scale(1.3) rotate(5deg); }
+    60%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-3deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(1.1) rotate(0); }
+  }
+
+  .confetti {
+    position: absolute;
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+    pointer-events: none;
+    z-index: 50;
+    top: 50%;
+    left: 50%;
+  }
+</style>
+</head>
+<body>
+<div id="game">
+  <div id="header"><h1>🌸 Ninas ord 🌸</h1></div>
+  <div id="word"></div>
+  <div id="playarea">
+    <div id="celebrate">⭐ Bra jobbat! ⭐</div>
+  </div>
+</div>
+
+<script>
+const WORDS = [
+  'SOL','MÅNE','HAV','SNÖ','IS','REGN','VIND','MOLN','ELD','SAND',
+  'JORD','BERG','SJÖ','STEN','TRÄD','BLAD','GRÄS','BLOMMA','STJÄRNA','HIMMEL',
+  'KATT','HUND','KO','GRIS','HÄST','FÅR','GET','RÄV','ÄLG','ANKA',
+  'MUS','APA','ORM','BI','MYRA','FISK','BJÖRN','VARG','KANIN','FÅGEL',
+  'ÖGA','ÖRA','MUN','NÄSA','HAND','FOT','ARM','BEN','HÅR','TAND',
+  'MAMMA','PAPPA','BARN','MOR','FAR','VÄN','BROR','FARMOR','MORMOR','NINA',
+  'ÄPPLE','BANAN','MJÖLK','BRÖD','OST','KAKA','GLASS','VATTEN','SMÖR','SALT',
+  'SOPPA','KORV','RIS','GODIS','SAFT','BIL','BOK','SKO','BOLL','HUS',
+  'BORD','STOL','SÄNG','DÖRR','LAMPA','KLOCKA','NALLE','DOCKA','PENNA','SPEL',
+  'MÖSSA','TRÖJA','SOCKA','RÖD','GUL','BLÅ','GRÖN','VIT','ROSA','LILA'
+];
+
+const COLORS = [
+  '#ff1493', '#ff69b4', '#ff4081', '#e91e63', '#ec407a',
+  '#ad1457', '#c71585', '#d81b60', '#f06292', '#ba68c8',
+  '#9c27b0', '#8e24aa', '#ff6b9d', '#ff8fab', '#e040fb',
+  '#ff5a8c', '#ff7eb9', '#db7093', '#ff4d88', '#ff3d7f'
+];
+
+let currentWord = '';
+let progress = 0;
+let letters = [];
+let animationId = null;
+let lastWord = '';
+let busy = false;
+
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+
+function pickWord() {
+  let w;
+  do { w = pick(WORDS); } while (w === lastWord && WORDS.length > 1);
+  lastWord = w;
+  return w;
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+function loadWord() {
+  if (animationId) cancelAnimationFrame(animationId);
+  busy = false;
+
+  currentWord = pickWord();
+  progress = 0;
+  letters = [];
+
+  const wordEl = document.getElementById('word');
+  wordEl.innerHTML = '';
+  for (const ch of currentWord) {
+    const span = document.createElement('span');
+    span.className = 'word-letter';
+    span.textContent = ch;
+    wordEl.appendChild(span);
+  }
+
+  const playarea = document.getElementById('playarea');
+  playarea.querySelectorAll('.letter').forEach(el => el.remove());
+
+  const chars = shuffle(currentWord.split(''));
+  const rect = playarea.getBoundingClientRect();
+  const size = Math.min(86, Math.max(60, window.innerWidth * 0.11));
+  const margin = 10;
+
+  chars.forEach(ch => {
+    const el = document.createElement('div');
+    el.className = 'letter';
+    el.textContent = ch;
+    const color = pick(COLORS);
+    el.style.background = `radial-gradient(circle at 35% 30%, #fff6, ${color} 60%, ${shade(color, -25)})`;
+
+    const letter = {
+      el, char: ch, color, size,
+      x: margin + Math.random() * Math.max(1, rect.width - size - margin * 2),
+      y: margin + Math.random() * Math.max(1, rect.height - size - margin * 2),
+      vx: (Math.random() < 0.5 ? -1 : 1) * (0.15 + Math.random() * 0.3),
+      vy: (Math.random() < 0.5 ? -1 : 1) * (0.15 + Math.random() * 0.3),
+      disappeared: false,
+    };
+
+    el.style.left = letter.x + 'px';
+    el.style.top  = letter.y + 'px';
+
+    const handler = (e) => { e.preventDefault(); clickLetter(letter); };
+    el.addEventListener('click', handler);
+    playarea.appendChild(el);
+    letters.push(letter);
+  });
+
+  animate();
+}
+
+function shade(hex, percent) {
+  const num = parseInt(hex.slice(1), 16);
+  const amt = Math.round(2.55 * percent);
+  const r = Math.max(0, Math.min(255, (num >> 16) + amt));
+  const g = Math.max(0, Math.min(255, ((num >> 8) & 0xff) + amt));
+  const b = Math.max(0, Math.min(255, (num & 0xff) + amt));
+  return '#' + ((1 << 24) | (r << 16) | (g << 8) | b).toString(16).slice(1);
+}
+
+function clickLetter(letter) {
+  if (busy || letter.disappeared) return;
+  const expected = currentWord[progress];
+
+  if (letter.char === expected) {
+    const wordEl = document.getElementById('word');
+    const target = wordEl.children[progress];
+    target.style.color = letter.color;
+    target.style.webkitTextStroke = `3px ${shade(letter.color, -15)}`;
+    target.classList.add('filled');
+
+    letter.el.classList.add('disappear');
+    letter.disappeared = true;
+    progress++;
+
+    if (progress === currentWord.length) {
+      busy = true;
+      setTimeout(celebrate, 400);
+    }
+  } else {
+    letter.el.classList.add('wrong');
+    setTimeout(() => letter.el.classList.remove('wrong'), 450);
+  }
+}
+
+function celebrate() {
+  const celebrateEl = document.getElementById('celebrate');
+  celebrateEl.classList.remove('show');
+  void celebrateEl.offsetWidth;
+  celebrateEl.classList.add('show');
+
+  const playarea = document.getElementById('playarea');
+  for (let i = 0; i < 60; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.background = pick(COLORS);
+    playarea.appendChild(c);
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 150 + Math.random() * 450;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    const rot = (Math.random() * 1440) - 720;
+    c.animate([
+      { transform: 'translate(-50%, -50%) rotate(0)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) rotate(${rot}deg)`, opacity: 0 }
+    ], { duration: 1600 + Math.random() * 600, easing: 'cubic-bezier(.2,.7,.4,1)' });
+    setTimeout(() => c.remove(), 2200);
+  }
+
+  setTimeout(loadWord, 2000);
+}
+
+function animate() {
+  const playarea = document.getElementById('playarea');
+  const rect = playarea.getBoundingClientRect();
+
+  for (const l of letters) {
+    if (l.disappeared) continue;
+    l.x += l.vx;
+    l.y += l.vy;
+
+    if (l.x < 0)               { l.x = 0; l.vx = Math.abs(l.vx); }
+    if (l.x > rect.width - l.size)  { l.x = rect.width - l.size; l.vx = -Math.abs(l.vx); }
+    if (l.y < 0)               { l.y = 0; l.vy = Math.abs(l.vy); }
+    if (l.y > rect.height - l.size) { l.y = rect.height - l.size; l.vy = -Math.abs(l.vy); }
+
+    l.el.style.left = l.x + 'px';
+    l.el.style.top  = l.y + 'px';
+  }
+
+  // gentle bump between letters so they don't overlap too much
+  for (let i = 0; i < letters.length; i++) {
+    const a = letters[i];
+    if (a.disappeared) continue;
+    for (let j = i + 1; j < letters.length; j++) {
+      const b = letters[j];
+      if (b.disappeared) continue;
+      const dx = (a.x + a.size / 2) - (b.x + b.size / 2);
+      const dy = (a.y + a.size / 2) - (b.y + b.size / 2);
+      const d = Math.hypot(dx, dy);
+      const min = a.size * 0.9;
+      if (d > 0 && d < min) {
+        const push = (min - d) / 2;
+        const nx = dx / d, ny = dy / d;
+        a.x += nx * push; a.y += ny * push;
+        b.x -= nx * push; b.y -= ny * push;
+        a.vx = nx * Math.abs(a.vx || 1);
+        a.vy = ny * Math.abs(a.vy || 1);
+        b.vx = -nx * Math.abs(b.vx || 1);
+        b.vy = -ny * Math.abs(b.vy || 1);
+      }
+    }
+  }
+
+  animationId = requestAnimationFrame(animate);
+}
+
+window.addEventListener('load', loadWord);
+window.addEventListener('resize', () => {
+  const playarea = document.getElementById('playarea');
+  const rect = playarea.getBoundingClientRect();
+  const size = Math.min(86, Math.max(60, window.innerWidth * 0.11));
+  letters.forEach(l => {
+    l.size = size;
+    l.x = Math.min(Math.max(0, l.x), rect.width - size);
+    l.y = Math.min(Math.max(0, l.y), rect.height - size);
+    l.el.style.width = size + 'px';
+    l.el.style.height = size + 'px';
+  });
+});
+</script>
+</body>
+</html>
