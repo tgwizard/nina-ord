@@ -319,6 +319,65 @@
     60%      { transform: translateY(-14px) rotate(10deg)  scale(1.05); }
   }
 
+  #level-badge {
+    font-size: clamp(12px, 1.6vw, 16px);
+    color: #c71585;
+    font-weight: 700;
+    letter-spacing: 2px;
+    margin-top: 2px;
+    text-transform: uppercase;
+    min-height: 1em;
+    text-shadow: 1px 1px 0 #fff;
+  }
+
+  #timer-bar-container {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.25);
+    border-bottom: 1px solid rgba(255, 105, 180, 0.25);
+    z-index: 60;
+    pointer-events: none;
+    display: none;
+  }
+  #timer-bar-container.active { display: block; }
+  #timer-bar {
+    height: 100%;
+    width: 100%;
+    background: linear-gradient(90deg, #ff1493, #ff4081, #f44336);
+    transform-origin: left center;
+    box-shadow: 0 0 10px rgba(255, 20, 147, 0.6);
+  }
+
+  #fail {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%) scale(0);
+    font-size: clamp(80px, 18vw, 180px);
+    line-height: 1;
+    opacity: 0;
+    pointer-events: none;
+    z-index: 110;
+    filter:
+      drop-shadow(0 0 12px rgba(255,255,255,0.9))
+      drop-shadow(4px 4px 0 rgba(199, 21, 133, 0.4));
+  }
+  #fail.show { animation: fail-show 1.3s ease forwards; }
+  @keyframes fail-show {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0) rotate(-20deg); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.25) rotate(8deg); }
+    70%  { opacity: 1; transform: translate(-50%, -50%) scale(1) rotate(-3deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8) translateY(40px); }
+  }
+
+  #playarea.fail { animation: playarea-shake 0.5s ease-in-out 2; }
+  @keyframes playarea-shake {
+    0%, 100% { transform: translateX(0); }
+    25% { transform: translateX(-14px); }
+    75% { transform: translateX(14px); }
+  }
+
   @media (max-width: 600px) {
     #header { padding: 4px 10px 0; }
     h1 { font-size: clamp(18px, 5vw, 28px); letter-spacing: 1px; text-shadow: 1px 1px 0 #fff, 2px 2px 0 rgba(199,21,133,.2); }
@@ -347,10 +406,15 @@
 </head>
 <body>
 <div id="game">
-  <div id="header"><h1>🌸 <span id="title-label">Ninas</span> ord 🌸</h1></div>
+  <div id="header">
+    <h1>🌸 <span id="title-label">Ninas</span> ord 🌸</h1>
+    <div id="level-badge"></div>
+  </div>
   <div id="word"></div>
   <div id="playarea">
+    <div id="timer-bar-container"><div id="timer-bar"></div></div>
     <div id="celebrate"><span>⭐ BRA JOBBAT! ⭐</span></div>
+    <div id="fail">⏰</div>
   </div>
   <div id="neon-cursor">★</div>
 </div>
@@ -403,12 +467,18 @@ const COLORS = [
 
 const SPARKLE_CHARS = ['✦', '★', '✧', '♥', '✿'];
 
+const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZÅÄÖ'.split('');
+
 let currentWord = '';
 let progress = 0;
 let letters = [];
 let animationId = null;
 let lastWord = '';
 let busy = false;
+let timerId = null;
+let LEVEL = 1;
+let EXTRA_LETTERS = 0;
+let TIMER_SECONDS = 0;
 
 const pick = arr => arr[Math.floor(Math.random() * arr.length)];
 
@@ -447,7 +517,12 @@ function loadWord() {
   const playarea = document.getElementById('playarea');
   playarea.querySelectorAll('.letter').forEach(el => el.remove());
 
-  const chars = shuffle(currentWord.split(''));
+  const chars = currentWord.split('');
+  if (EXTRA_LETTERS > 0) {
+    const unused = ALPHABET.filter(c => !chars.includes(c));
+    chars.push(...shuffle(unused).slice(0, EXTRA_LETTERS));
+  }
+  shuffle(chars);
   const rect = playarea.getBoundingClientRect();
   const size = Math.min(130, Math.max(92, window.innerWidth * 0.1625));
   const margin = 10;
@@ -478,6 +553,51 @@ function loadWord() {
   });
 
   animate();
+  startTimer();
+}
+
+function startTimer() {
+  stopTimer();
+  if (TIMER_SECONDS <= 0) return;
+  const container = document.getElementById('timer-bar-container');
+  const bar = document.getElementById('timer-bar');
+  container.classList.add('active');
+  bar.style.transition = 'none';
+  bar.style.transform = 'scaleX(1)';
+  void bar.offsetWidth;
+  bar.style.transition = `transform ${TIMER_SECONDS}s linear`;
+  bar.style.transform = 'scaleX(0)';
+  timerId = setTimeout(failWord, TIMER_SECONDS * 1000);
+}
+
+function stopTimer() {
+  if (timerId) { clearTimeout(timerId); timerId = null; }
+  document.getElementById('timer-bar-container').classList.remove('active');
+}
+
+function failWord() {
+  if (busy) return;
+  busy = true;
+  stopTimer();
+  if (animationId) cancelAnimationFrame(animationId);
+
+  const playarea = document.getElementById('playarea');
+  playarea.classList.add('fail');
+
+  const failEl = document.getElementById('fail');
+  failEl.classList.remove('show');
+  void failEl.offsetWidth;
+  failEl.classList.add('show');
+
+  letters.forEach(l => {
+    if (!l.disappeared) l.el.classList.add('wrong');
+  });
+
+  setTimeout(() => {
+    playarea.classList.remove('fail');
+    failEl.classList.remove('show');
+    loadWord();
+  }, 1400);
 }
 
 function shade(hex, percent) {
@@ -508,6 +628,7 @@ function clickLetter(letter) {
 
     if (progress === currentWord.length) {
       busy = true;
+      stopTimer();
       setTimeout(celebrate, 400);
     }
   } else {
@@ -683,9 +804,14 @@ function animate() {
 window.addEventListener('load', () => {
   const params = new URLSearchParams(window.location.search);
   const label = params.get('label') || 'Ninas';
-  const titleLabel = document.getElementById('title-label');
-  titleLabel.textContent = label;
+  document.getElementById('title-label').textContent = label;
   document.title = `${label} ord`;
+
+  const rawLevel = parseInt(params.get('level') || '1', 10);
+  LEVEL = Number.isFinite(rawLevel) ? Math.max(1, Math.min(4, rawLevel)) : 1;
+  EXTRA_LETTERS  = LEVEL >= 2 ? 5 : 0;
+  TIMER_SECONDS  = LEVEL === 3 ? 10 : LEVEL === 4 ? 2 : 0;
+  document.getElementById('level-badge').textContent = LEVEL > 1 ? `Nivå ${LEVEL}` : '';
 
   loadWord();
   const playarea = document.getElementById('playarea');
