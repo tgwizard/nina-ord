@@ -78,20 +78,67 @@
     border-radius: 28px;
     overflow: hidden;
     box-shadow: inset 0 0 40px rgba(255, 182, 193, 0.5);
+    cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='36' height='36' viewBox='0 0 36 36'><path d='M18 3 L22 14 L33 14 L24 21 L28 32 L18 25 L8 32 L12 21 L3 14 L14 14 Z' fill='%23ff1493' stroke='%23fff' stroke-width='2' stroke-linejoin='round'/></svg>") 18 18, auto;
+  }
+
+  .sparkle {
+    position: absolute;
+    pointer-events: none;
+    font-size: 24px;
+    line-height: 1;
+    z-index: 40;
+    animation: sparkle-out 0.9s ease-out forwards;
+    text-shadow: 0 0 8px currentColor, 0 0 2px #fff;
+    will-change: transform, opacity;
+  }
+
+  #neon-cursor {
+    position: fixed;
+    left: 0; top: 0;
+    pointer-events: none;
+    z-index: 1000;
+    font-size: 48px;
+    line-height: 1;
+    color: #ff10a0;
+    text-shadow:
+      0 0 6px #ff10a0,
+      0 0 14px #ff4dc4,
+      0 0 24px #ff69b4,
+      0 0 2px #fff;
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    transition: opacity 0.12s ease;
+    will-change: transform, left, top;
+  }
+
+  #neon-cursor.visible {
+    opacity: 1;
+    animation: cursor-pulse 0.55s ease-in-out infinite;
+  }
+
+  @keyframes cursor-pulse {
+    0%, 100% { transform: translate(-50%, -50%) scale(1); }
+    50%      { transform: translate(-50%, -50%) scale(1.45); }
+  }
+
+  @keyframes sparkle-out {
+    0%   { opacity: 0; transform: translate(-50%, -50%) scale(0.2) rotate(0); }
+    25%  { opacity: 1; transform: translate(-50%, -50%) scale(1.3) rotate(120deg); }
+    100% { opacity: 0; transform: translate(-50%, -50%) scale(0.5) rotate(240deg); }
   }
 
   .letter {
     position: absolute;
-    width: clamp(60px, 11vw, 86px);
-    height: clamp(60px, 11vw, 86px);
+    width: clamp(74px, 13vw, 104px);
+    height: clamp(74px, 13vw, 104px);
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: clamp(32px, 6vw, 48px);
+    font-size: clamp(38px, 7vw, 58px);
     font-weight: 900;
     color: white;
-    cursor: pointer;
+    cursor: none;
     box-shadow:
       inset 0 -6px 0 rgba(0,0,0,0.18),
       inset 0 4px 0 rgba(255,255,255,0.35),
@@ -112,13 +159,40 @@
   }
 
   .letter.disappear {
-    animation: disappear 0.5s cubic-bezier(.5,-0.4,.7,.3) forwards;
+    animation: burst-pop 0.45s cubic-bezier(.4, 1.6, .6, 1) forwards;
     pointer-events: none;
   }
-  @keyframes disappear {
-    0%   { transform: scale(1) rotate(0); opacity: 1; }
-    30%  { transform: scale(1.4) rotate(15deg); opacity: 1; }
-    100% { transform: scale(0) rotate(540deg); opacity: 0; }
+  @keyframes burst-pop {
+    0%   { transform: scale(1) rotate(0); opacity: 1; filter: brightness(1); }
+    35%  { transform: scale(1.55) rotate(10deg); opacity: 1; filter: brightness(1.6); }
+    100% { transform: scale(0) rotate(420deg); opacity: 0; filter: brightness(2); }
+  }
+
+  .burst {
+    position: absolute;
+    pointer-events: none;
+    font-size: 26px;
+    line-height: 1;
+    z-index: 45;
+    text-shadow: 0 0 10px currentColor, 0 0 2px #fff;
+    will-change: transform, opacity;
+  }
+
+  .shockwave {
+    position: absolute;
+    pointer-events: none;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 4px solid currentColor;
+    transform: translate(-50%, -50%);
+    z-index: 44;
+    animation: shockwave 0.55s ease-out forwards;
+    will-change: transform, opacity;
+  }
+  @keyframes shockwave {
+    0%   { width: 20px;  height: 20px;  opacity: 0.9; border-width: 5px; }
+    100% { width: 220px; height: 220px; opacity: 0;   border-width: 1px; }
   }
 
   #celebrate {
@@ -165,28 +239,56 @@
   <div id="playarea">
     <div id="celebrate">⭐ Bra jobbat! ⭐</div>
   </div>
+  <div id="neon-cursor">★</div>
 </div>
 
 <script>
 const WORDS = [
-  'SOL','MÅNE','HAV','SNÖ','IS','REGN','VIND','MOLN','ELD','SAND',
-  'JORD','BERG','SJÖ','STEN','TRÄD','BLAD','GRÄS','BLOMMA','STJÄRNA','HIMMEL',
+  // nature & weather
+  'SOL','MÅNE','STJÄRNA','HAV','SNÖ','IS','REGN','VIND','MOLN','ELD',
+  'SAND','JORD','BERG','SJÖ','STEN','TRÄD','BLAD','GRÄS','BLOMMA',
+  // colors (all basic)
+  'RÖD','GUL','BLÅ','GRÖN','VIT','SVART','ROSA','LILA','BRUN','ORANGE','GRÅ',
+  // animals
   'KATT','HUND','KO','GRIS','HÄST','FÅR','GET','RÄV','ÄLG','ANKA',
   'MUS','APA','ORM','BI','MYRA','FISK','BJÖRN','VARG','KANIN','FÅGEL',
+  'HÖNA','UGGLA','GRODA','FJÄRIL','VAL','HAJ','LEJON','TIGER','ELEFANT','PINGVIN',
+  // body
   'ÖGA','ÖRA','MUN','NÄSA','HAND','FOT','ARM','BEN','HÅR','TAND',
+  // family & people
   'MAMMA','PAPPA','BARN','MOR','FAR','VÄN','BROR','FARMOR','MORMOR','NINA',
+  // food
   'ÄPPLE','BANAN','MJÖLK','BRÖD','OST','KAKA','GLASS','VATTEN','SMÖR','SALT',
-  'SOPPA','KORV','RIS','GODIS','SAFT','BIL','BOK','SKO','BOLL','HUS',
-  'BORD','STOL','SÄNG','DÖRR','LAMPA','KLOCKA','NALLE','DOCKA','PENNA','SPEL',
-  'MÖSSA','TRÖJA','SOCKA','RÖD','GUL','BLÅ','GRÖN','VIT','ROSA','LILA'
+  'KORV','GODIS',
+  // objects
+  'BIL','BOK','SKO','BOLL','HUS','BORD','STOL','SÄNG','DÖRR','LAMPA',
+  'KLOCKA','NALLE','DOCKA','PENNA','TÅG',
+  // clothes
+  'MÖSSA','TRÖJA','SOCKA'
 ];
 
 const COLORS = [
-  '#ff1493', '#ff69b4', '#ff4081', '#e91e63', '#ec407a',
-  '#ad1457', '#c71585', '#d81b60', '#f06292', '#ba68c8',
-  '#9c27b0', '#8e24aa', '#ff6b9d', '#ff8fab', '#e040fb',
-  '#ff5a8c', '#ff7eb9', '#db7093', '#ff4d88', '#ff3d7f'
+  // pinks & magentas (keep the theme happy)
+  '#ff1493', '#ff69b4', '#ff4081', '#e91e63', '#f06292',
+  '#ff6b9d', '#ff8fab', '#ff5a8c', '#db7093', '#ff3d7f',
+  // purples & violets
+  '#c71585', '#9c27b0', '#ba68c8', '#ab47bc', '#7e57c2',
+  '#673ab7', '#5e35b1', '#8e24aa',
+  // reds & oranges
+  '#f44336', '#e53935', '#ff5722', '#ff6347', '#ff7043',
+  '#ff8c00', '#ffa726',
+  // yellows
+  '#ffc107', '#ffca28', '#ffd54f', '#fdd835',
+  // greens
+  '#8bc34a', '#66bb6a', '#4caf50', '#43a047', '#26a69a',
+  // cyans & blues
+  '#00bcd4', '#29b6f6', '#03a9f4', '#2196f3', '#1e88e5',
+  '#3f51b5', '#5c6bc0',
+  // browns (for a grounded contrast)
+  '#8d6e63', '#a1887f'
 ];
+
+const SPARKLE_CHARS = ['✦', '★', '✧', '♥', '✿'];
 
 let currentWord = '';
 let progress = 0;
@@ -234,7 +336,7 @@ function loadWord() {
 
   const chars = shuffle(currentWord.split(''));
   const rect = playarea.getBoundingClientRect();
-  const size = Math.min(86, Math.max(60, window.innerWidth * 0.11));
+  const size = Math.min(104, Math.max(74, window.innerWidth * 0.13));
   const margin = 10;
 
   chars.forEach(ch => {
@@ -287,6 +389,8 @@ function clickLetter(letter) {
 
     letter.el.classList.add('disappear');
     letter.disappeared = true;
+    burstLetter(letter);
+    document.getElementById('neon-cursor').classList.remove('visible');
     progress++;
 
     if (progress === currentWord.length) {
@@ -371,11 +475,82 @@ function animate() {
   animationId = requestAnimationFrame(animate);
 }
 
-window.addEventListener('load', loadWord);
+window.addEventListener('load', () => {
+  loadWord();
+  const playarea = document.getElementById('playarea');
+  const neon = document.getElementById('neon-cursor');
+
+  let lastSparkle = 0;
+  playarea.addEventListener('pointermove', e => {
+    const now = performance.now();
+    if (now - lastSparkle < 45) return;
+    lastSparkle = now;
+    const rect = playarea.getBoundingClientRect();
+    const s = document.createElement('div');
+    s.className = 'sparkle';
+    s.textContent = pick(SPARKLE_CHARS);
+    s.style.color = pick(COLORS);
+    s.style.left = (e.clientX - rect.left + (Math.random() - 0.5) * 10) + 'px';
+    s.style.top  = (e.clientY - rect.top  + (Math.random() - 0.5) * 10) + 'px';
+    playarea.appendChild(s);
+    setTimeout(() => s.remove(), 900);
+  });
+
+  document.addEventListener('pointermove', e => {
+    neon.style.left = e.clientX + 'px';
+    neon.style.top  = e.clientY + 'px';
+  });
+
+  playarea.addEventListener('pointerover', e => {
+    if (e.target.classList && e.target.classList.contains('letter')) {
+      neon.classList.add('visible');
+    }
+  });
+  playarea.addEventListener('pointerout', e => {
+    if (e.target.classList && e.target.classList.contains('letter')) {
+      neon.classList.remove('visible');
+    }
+  });
+});
+
+function burstLetter(letter) {
+  const playarea = document.getElementById('playarea');
+  const cx = letter.x + letter.size / 2;
+  const cy = letter.y + letter.size / 2;
+  const count = 14;
+  for (let i = 0; i < count; i++) {
+    const p = document.createElement('div');
+    p.className = 'burst';
+    p.textContent = pick(SPARKLE_CHARS);
+    p.style.color = letter.color;
+    p.style.left = cx + 'px';
+    p.style.top  = cy + 'px';
+    playarea.appendChild(p);
+    const angle = (i / count) * Math.PI * 2 + Math.random() * 0.3;
+    const dist = 60 + Math.random() * letter.size * 1.3;
+    const dx = Math.cos(angle) * dist;
+    const dy = Math.sin(angle) * dist;
+    p.animate([
+      { transform: 'translate(-50%, -50%) scale(0.3) rotate(0)', opacity: 1 },
+      { transform: `translate(calc(-50% + ${dx}px), calc(-50% + ${dy}px)) scale(1.4) rotate(${Math.random()*360}deg)`, opacity: 1, offset: 0.35 },
+      { transform: `translate(calc(-50% + ${dx*1.4}px), calc(-50% + ${dy*1.4}px)) scale(0.2) rotate(${Math.random()*540}deg)`, opacity: 0 }
+    ], { duration: 700 + Math.random() * 300, easing: 'cubic-bezier(.2,.7,.4,1)' });
+    setTimeout(() => p.remove(), 1100);
+  }
+
+  // shockwave ring
+  const ring = document.createElement('div');
+  ring.className = 'shockwave';
+  ring.style.left = cx + 'px';
+  ring.style.top  = cy + 'px';
+  ring.style.borderColor = letter.color;
+  playarea.appendChild(ring);
+  setTimeout(() => ring.remove(), 600);
+}
 window.addEventListener('resize', () => {
   const playarea = document.getElementById('playarea');
   const rect = playarea.getBoundingClientRect();
-  const size = Math.min(86, Math.max(60, window.innerWidth * 0.11));
+  const size = Math.min(104, Math.max(74, window.innerWidth * 0.13));
   letters.forEach(l => {
     l.size = size;
     l.x = Math.min(Math.max(0, l.x), rect.width - size);
